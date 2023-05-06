@@ -1,14 +1,14 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
-from settings import TOKEN, RACES
+from settings import TOKEN, RACES, CLASSES
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
-NAME, CLASS, RAZE, BIO = range(4)
+NAME, CLASS, RACE, BIO = range(4)
 
 # COMANDS
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -23,38 +23,62 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(HELP_MSG)
 
 
+async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    CANCEL_MSG = 'It\'s a lot for you i guess'
+    await update.message.reply_text(CANCEL_MSG)
+
 # HANDLERS
 
-def handle_response(text: str) -> str:
-    menssages.append(text)
-    if 'hello' in text:
-        return 'Oh, hello my best friend!'
-    return 'Do you want a fight?'
-
-async def races(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name: str = update.message.text
     context.user_data['name'] = name
 
     RACES_MSG: str = 'Nice name! Now you have to choice your race'
-    reply_keyboard: list[list[str]] = [RACES]
+    reply_keyboard: list[list[str]] = [[race] for race in RACES]
  
-
     await update.message.reply_text(
         RACES_MSG,
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, input_field_placeholder='Select')
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard,
+            input_field_placeholder='Select',
+            is_persistent=True,
+            one_time_keyboard=True
+        )
     )
 
+    return RACE
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text: str = update.message.text
-    
-    context.user_data['total_msgs'] = [text] + context.user_data['total_msgs']
-    print(context.user_data)
-    print(f'User {update.message.chat.id} type: "{text}"')
+async def get_race(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    race: str = update.message.text
+    context.user_data['race'] = race
 
-    response = handle_response(text)
-    await update.message.reply_text(str(context.user_data.get('total_msgs', None)))
-    # await update.message.reply_text(str([context.user_data[k] for k in context.user_data]))
+    CLASSES_MSG: str = 'Oh i see, well, i think the only thing missing is your class'
+    reply_keyboard: list[list[str]] = [[clas] for clas in CLASSES]
+ 
+    await update.message.reply_text(
+        CLASSES_MSG,
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard,
+            one_time_keyboard=True,
+            input_field_placeholder='Select',
+            is_persistent=True
+        )
+    )
+
+    return CLASS
+
+async def get_class(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    clas: str = update.message.text
+    context.user_data['class'] = clas
+
+    ADVENTURE_MSG: str = 'Oh you are sooo cute. I hope you can handle the adventure'
+
+    await update.message.reply_text(
+        ADVENTURE_MSG,
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+    return CLASS
 
 async def handle_unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     UNKNOWN_MSG = 'Sorry, I didn\'t understand that command.'
@@ -72,26 +96,21 @@ if __name__ == '__main__':
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start_command)],
         states={
-            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, races)],
-            GENDER: [MessageHandler(filters.Regex("^(Boy|Girl|Other)$"), gender)],
-            PHOTO: [MessageHandler(filters.PHOTO, photo), CommandHandler("skip", skip_photo)],
-            LOCATION: [
-                MessageHandler(filters.LOCATION, location),
-                CommandHandler("skip", skip_location),
-            ],
-            BIO: [MessageHandler(filters.TEXT & ~filters.COMMAND, bio)],
+            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
+            RACE: [MessageHandler(filters.Regex(f'^({"|".join(RACES)})$'), get_race)],
+            CLASS: [MessageHandler(filters.Regex(f'^({"|".join(CLASSES)})$'), get_class)],
         },
-        fallbacks=[CommandHandler("cancel", cancel)],
+        fallbacks=[CommandHandler("cancel", cancel_command)],
     )
 
-    application.add_handler(conv_handler)
+    app.add_handler(conv_handler)
 
     # Commands
-    app.add_handler(CommandHandler('start', start_command))
+    # app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
 
     # Messages
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+    # app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
     app.add_handler(MessageHandler(filters.COMMAND, handle_unknown))
 
     # Errors
