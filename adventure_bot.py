@@ -1,17 +1,20 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
+
 from settings import TOKEN, RACES, CLASSES
+from game import StateGame
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
-NAME, CLASS, RACE, CANCEL = range(4)
+NAME, CLASS, RACE, CANCEL, MENU, SCAPE, INFO, FIGHT = range(8)
+MENU_BUTTONS = ['Info character', 'Find enemy', 'Pay for lvl']
 
 # COMANDS
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     WELCOME_MSG = 'WELCOME TO THE DUNGEON ADVENTURER! to begin tell me your heroe name.'
     context.user_data['total_msgs'] = []
     await update.message.reply_text(WELCOME_MSG)
@@ -23,7 +26,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(HELP_MSG)
 
 
-async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     CANCEL_MSG = 'It\'s a lot for you i guess'
     await update.message.reply_text(CANCEL_MSG)
 
@@ -31,7 +34,7 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # HANDLERS
 
-async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     name: str = update.message.text
     context.user_data['name'] = name
 
@@ -50,7 +53,7 @@ async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return RACE
 
-async def get_race(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_race(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     race: str = update.message.text
     context.user_data['race'] = race
 
@@ -69,21 +72,39 @@ async def get_race(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return CLASS
 
-async def get_class(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    MENU_MSG = 'What do you want to do?'
+    reply_keyboard: list[list[str]] = [[button] for button in MENU_BUTTONS]
+
+    await update.message.reply_text(
+        MENU_MSG,
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard,
+            one_time_keyboard=True,
+            input_field_placeholder='Select',
+            is_persistent=True
+        )
+    )
+
+    return MENU
+
+async def get_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     clas: str = update.message.text
     context.user_data['class'] = clas
+    context.user_data['game'] = StateGame(
+        context.user_data['name'],
+        context.user_data['class'],
+        context.user_data['race'],
+    )
 
     ADVENTURE_MSG: str = 'Oh you are sooo cute. I hope you can handle the adventure'
 
-    await update.message.reply_text(
-        ADVENTURE_MSG,
-        reply_markup=ReplyKeyboardRemove()
-    )
+    await update.message.reply_text(ADVENTURE_MSG, reply_markup=ReplyKeyboardRemove())
 
-    return CLASS
+    return await menu(update, context)
 
 async def handle_unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    UNKNOWN_MSG = 'Sorry, I didn\'t understand that command.'
+    UNKNOWN_MSG = 'Sorry, i didn\'t understand that command.'
     await update.message.reply_text(UNKNOWN_MSG)
 
 # ERROR
@@ -103,6 +124,7 @@ if __name__ == '__main__':
             NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
             RACE: [MessageHandler(filters.Regex(f'^({"|".join(RACES)})$'), get_race)],
             CLASS: [MessageHandler(filters.Regex(f'^({"|".join(CLASSES)})$'), get_class)],
+            MENU: [MessageHandler(filters.Regex(f'^({"|".join(MENU_BUTTONS)})$'), menu)],
             CANCEL: [start],
         },
         fallbacks=[CommandHandler("cancel", cancel_command)],
