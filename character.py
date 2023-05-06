@@ -1,10 +1,13 @@
+from random import randint
+from settings import STATS
+
 INITIAL_LIFE = 100
 LIFE_FACTOR = 1.05
 LIMIT_EXP = 100
 GOLD_FOR_LVL = 10
 
 class Character:
-    def __init__(self, name : str, clas : str, raze : str) -> None:
+    def __init__(self, name : str, clas : str, race : str) -> None:
         self.exp : int = 0
         self.gold : int = 0
         self.lvl : int = 1
@@ -12,11 +15,11 @@ class Character:
         self.life : int = self._max_life
         self.name : str = name
         self.clas : str = clas
-        self.raze : str = raze
-        self.stats : dict = {}
+        self.race : str = race
+        self.stats : dict = { stat: randint(1, 20) for stat in STATS }
 
     def __str__(self) -> str:
-        return f'{ self.name } - { self.clas } - { self.raze }'
+        return f'{ self.name } - { self.clas } - { self.race }'
 
     def _lvl_up(self) -> None:
         self.lvl += 1
