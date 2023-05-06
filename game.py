@@ -1,9 +1,9 @@
 from character import Character
 
 class StateGame:
-    def __init__(self, character : Character) -> None:
+    def __init__(self, name : str, clas: str, race: str) -> None:
         self.treasures : list[str] = []
-        self.heroe : Character = character
+        self.heroe : Character = Character(name, clas, race)
         self.courage : int = 0
         self.actual_enemy : dict = {}
 
@@ -12,6 +12,7 @@ class StateGame:
             'life': self.heroe.life,
             'exp': self.heroe.exp,
             'gold': self.heroe.gold,
+            'courage': self.courage,
             'stats': self.heroe.stats,
         }
 
@@ -49,3 +50,6 @@ class StateGame:
 
     def get_score(self) -> int:
         return self.heroe.lvl + len(self.treasures) + 0.1 (self.heroe.exp + self.heroe.gold + self.heroe.life)
+
+    def pay_for_lvl(self):
+        pass
