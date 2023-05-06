@@ -8,7 +8,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-NAME, CLASS, RACE, BIO = range(4)
+NAME, CLASS, RACE, CANCEL = range(4)
 
 # COMANDS
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -26,6 +26,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     CANCEL_MSG = 'It\'s a lot for you i guess'
     await update.message.reply_text(CANCEL_MSG)
+
+    return CANCEL
 
 # HANDLERS
 
@@ -93,12 +95,15 @@ if __name__ == '__main__':
 
     app = Application.builder().token(TOKEN).build()
 
+    start = CommandHandler("start", start_command)
+
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start_command)],
+        entry_points=[start],
         states={
             NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
             RACE: [MessageHandler(filters.Regex(f'^({"|".join(RACES)})$'), get_race)],
             CLASS: [MessageHandler(filters.Regex(f'^({"|".join(CLASSES)})$'), get_class)],
+            CANCEL: [start],
         },
         fallbacks=[CommandHandler("cancel", cancel_command)],
     )
