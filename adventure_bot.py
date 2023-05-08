@@ -4,14 +4,16 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 from settings import TOKEN, RACES, CLASSES
 from game import StateGame
+from serializer import serializer_info, serializer_enemy, serializer_battle_result
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
-NAME, CLASS, RACE, CANCEL, MENU, SCAPE, INFO, FIGHT = range(8)
+NAME, CLASS, RACE, CANCEL, MENU, BATTLE, RESPONSE = range(7)
 MENU_BUTTONS = ['Info character', 'Find enemy', 'Pay for lvl']
+BATTLE_BUTTONS = [['Fight'], ['Escape']]
 
 # COMANDS
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -34,9 +36,92 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 # HANDLERS
 
+async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    MENU_MSG = 'What do you want to do?'
+    reply_keyboard: list[list[str]] = [[button] for button in MENU_BUTTONS]
+
+    await update.message.reply_text(
+        MENU_MSG,
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard,
+            one_time_keyboard=True,
+            input_field_placeholder='Select',
+            is_persistent=True
+        )
+    )
+
+    return RESPONSE
+
+async def pay(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    PAY_MSG: str = 'Not implemented yet'
+
+    await update.message.reply_text(
+        PAY_MSG,
+        parse_mode='MarkdownV2',
+        reply_markup=ReplyKeyboardRemove(),
+    )
+
+    return await menu(update, context)
+
+async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    info_msg: str = serializer_info(context.user_data.get('game').get_info_heroe())
+
+    await update.message.reply_text(
+        info_msg,
+        parse_mode='MarkdownV2',
+        reply_markup=ReplyKeyboardRemove(),
+    )
+
+    return await menu(update, context)
+
+async def find(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    enemy: dict = context.user_data.get('game').generate_battle()
+    enemy_msg = serializer_enemy(enemy)
+    reply_keyboard: list[list[str]] = BATTLE_BUTTONS
+
+    await update.message.reply_text(
+        enemy_msg,
+        parse_mode='MarkdownV2',
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard,
+            one_time_keyboard=True,
+            input_field_placeholder='Select',
+            is_persistent=True
+        )
+    )
+
+    return BATTLE
+
+async def battle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    option: str = update.message.text
+    game: StateGame = context.user_data.get('game')
+
+    # Fight
+    if option == BATTLE_BUTTONS[0]:
+        data = game.fight_battle()
+        battle_msg = serializer_battle_result(data)
+
+        await update.message.reply_text(
+            ESCAPE_MSG,
+            parse_mode='MarkdownV2',
+            reply_markup=ReplyKeyboardRemove()
+        )
+    # Escape
+    elif option == BATTLE_BUTTONS[1]:
+        game.pass_battle()
+
+        ESCAPE_MSG = 'Chicken, chip chip chip'
+        await update.message.reply_text(
+            ESCAPE_MSG,
+            parse_mode='MarkdownV2',
+            reply_markup=ReplyKeyboardRemove()
+        )
+
+    return await menu(update, context)
+
 async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     name: str = update.message.text
-    context.user_data['name'] = name
+    context.user_data['name']: str = name
 
     RACES_MSG: str = 'Nice name! Now you have to choice your race'
     reply_keyboard: list[list[str]] = [[race] for race in RACES]
@@ -55,7 +140,7 @@ async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def get_race(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     race: str = update.message.text
-    context.user_data['race'] = race
+    context.user_data['race']: str = race
 
     CLASSES_MSG: str = 'Oh i see, well, i think the only thing missing is your class'
     reply_keyboard: list[list[str]] = [[clas] for clas in CLASSES]
@@ -72,26 +157,10 @@ async def get_race(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return CLASS
 
-async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    MENU_MSG = 'What do you want to do?'
-    reply_keyboard: list[list[str]] = [[button] for button in MENU_BUTTONS]
-
-    await update.message.reply_text(
-        MENU_MSG,
-        reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard,
-            one_time_keyboard=True,
-            input_field_placeholder='Select',
-            is_persistent=True
-        )
-    )
-
-    return MENU
-
 async def get_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     clas: str = update.message.text
-    context.user_data['class'] = clas
-    context.user_data['game'] = StateGame(
+    context.user_data['class']: str = clas
+    context.user_data['game']: StateGame = StateGame(
         context.user_data['name'],
         context.user_data['class'],
         context.user_data['race'],
@@ -104,7 +173,7 @@ async def get_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return await menu(update, context)
 
 async def handle_unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    UNKNOWN_MSG = 'Sorry, i didn\'t understand that command.'
+    UNKNOWN_MSG: str = 'Sorry, i didn\'t understand that command.'
     await update.message.reply_text(UNKNOWN_MSG)
 
 # ERROR
@@ -114,17 +183,23 @@ async def handle_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == '__main__':
     print('Starting bot')
 
-    app = Application.builder().token(TOKEN).build()
+    app: Application = Application.builder().token(TOKEN).build()
 
-    start = CommandHandler("start", start_command)
+    start: CommandHandler = CommandHandler("start", start_command)
 
-    conv_handler = ConversationHandler(
+    conv_handler: ConversationHandler = ConversationHandler(
         entry_points=[start],
         states={
             NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
             RACE: [MessageHandler(filters.Regex(f'^({"|".join(RACES)})$'), get_race)],
             CLASS: [MessageHandler(filters.Regex(f'^({"|".join(CLASSES)})$'), get_class)],
             MENU: [MessageHandler(filters.Regex(f'^({"|".join(MENU_BUTTONS)})$'), menu)],
+            RESPONSE: [
+                MessageHandler(filters.Regex(MENU_BUTTONS[0]), info),
+                MessageHandler(filters.Regex(MENU_BUTTONS[1]), find),
+                MessageHandler(filters.Regex(MENU_BUTTONS[2]), pay),
+            ],
+            BATTLE: [MessageHandler(filters.Regex(f'^({"|".join(MENU_BUTTONS)})$'), battle)],
             CANCEL: [start],
         },
         fallbacks=[CommandHandler("cancel", cancel_command)],
