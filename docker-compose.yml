@@ -1,0 +1,12 @@
+version: '1'
+services:
+  bot:
+    image: python:3.10
+    container_name: rpg_bot
+    working_dir: /bot
+    volumes:
+      - .:/bot
+    ports:
+      - "8081:8081"
+    command: python3 adventure_bot.py
+    tty: true
