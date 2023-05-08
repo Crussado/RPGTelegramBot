@@ -8,5 +8,5 @@ services:
       - .:/bot
     ports:
       - "8081:8081"
-    command: python3 adventure_bot.py
+    command: bash -c "pip3 install -r requirements.txt && python3 adventure_bot.py" 
     tty: true

@@ -1,9 +1,8 @@
 from random import randint
 import openai
-from typing import Union
 
 from character import Character
-from settings import API_KEY, ENEMY_KEYS
+from settings import ENEMY_KEYS
 
 CATASTROFIC_LOSS, LOSS, WIN, PERFECT_WIN = range(4)
 
@@ -17,7 +16,6 @@ class StateGame:
         self.heroe : Character = Character(name, clas, race)
         self.courage : int = 0
         self.actual_enemy : dict = {}
-        openai.api_key = API_KEY
 
     def get_info_heroe(self):
         return {
@@ -34,7 +32,7 @@ class StateGame:
     def heroe_loss(self) -> bool:
         return self.heroe.life <= 0
 
-    def _parser_response_gpt(self, response: str) -> Union[dict, bool]:
+    def _parser_response_gpt(self, response: str) -> (dict | bool):
         inicio = response.find('{')
         fin = response.find('}')
         if inicio != -1 and fin != -1:
@@ -49,7 +47,7 @@ class StateGame:
     def generate_battle(self) -> dict:
         enemy = False
         while not enemy:
-            completion: openai.ChatCompletion = openai.ChatCompletion.create(
+            completion = openai.ChatCompletion.create(
                 model='gpt-3.5-turbo',
                 messages=[{'role': 'system', 'content': INITIAL_CHAT}, {'role': 'user', 'content': 'Genera un enemigo'}]
             )

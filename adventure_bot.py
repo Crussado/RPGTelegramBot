@@ -1,8 +1,11 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
+from dotenv import load_dotenv
+import os
+import openai
 
-from settings import TOKEN, RACES, CLASSES
+from settings import RACES, CLASSES
 from game import StateGame
 from serializer import serializer_info, serializer_enemy, serializer_battle_result
 
@@ -10,6 +13,8 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+load_dotenv('.env')
+openai.api_key = os.getenv('API_KEY_OPENAI')
 
 NAME, CLASS, RACE, CANCEL, MENU, BATTLE, RESPONSE = range(7)
 MENU_BUTTONS = ['Info character', 'Find enemy', 'Pay for lvl']
@@ -183,7 +188,7 @@ async def handle_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == '__main__':
     print('Starting bot')
 
-    app: Application = Application.builder().token(TOKEN).build()
+    app: Application = Application.builder().token(os.getenv('TOKEN_BOT')).build()
 
     start: CommandHandler = CommandHandler("start", start_command)
 
