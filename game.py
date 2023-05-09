@@ -2,13 +2,13 @@ from random import randint
 import openai
 
 from character import Character
-from settings import ENEMY_KEYS
+from settings import ENEMY_KEYS, STATS
 
 CATASTROFIC_LOSS, LOSS, WIN, PERFECT_WIN = range(4)
 
-INITIAL_CHAT = """A partir de ahora quiero que generes enemigos de un juego d&d que tendran 5 caracteristicas el nombre, aspecto, una situacion con la que el heroe se encontrara con el, en que atributo es fuerte el enemigo, los atributos pueden ser [dex, str, int, res], el nombre de un "tesoro" que el jugador obtendra por vencer el enemigo, el nivel de poder del enemigo, este ultimo debe ser un numero del 1 al 20.  La informacion debe ser un json.
-Quiero que los enemigos sean bizarros, chistosos, y grotescos, ejemplos: pato mutante, zombie panadero, necro-araña mutante ecologista.
-Yo te los ire pidiendo y solo quiero que respondas con el json."""
+INITIAL_CHAT = """Quiero que generes un enemigo de un juego d&d que tendra cuatro caracteristicas: 
+{ "nombre", "aspecto", "situacion": una con la que el heroe se encontrara con el, "tesoro": nombre de un tesoro que el jugador obtendra por vencer el enemigo }. La informacion debe ser un json.
+Quiero que los enemigos sean chistosos, bizarros, grotescos y absurdos. Las respuestas deben ser cortas, y cada vez que te refieras al jugador deberas llamarlo heroe"""
 
 class StateGame:
     def __init__(self, name : str, clas: str, race: str) -> None:
@@ -37,10 +37,12 @@ class StateGame:
         fin = response.find('}')
         if inicio != -1 and fin != -1:
             dict_str = response[inicio:fin+1].strip()
-            enemy = eval(dict_str)
+            enemy: dict = eval(dict_str)
             for key in ENEMY_KEYS:
                 if not key in enemy:
                     return False
+            enemy['power']: int = randint(5, 20)
+            enemy['stat']: str = STATS[randint(0, len(STATS))]
             return enemy
         return False
 
@@ -96,15 +98,15 @@ class StateGame:
 
     def fight_battle(self) -> int:
         roll: int = randint(1, 20)
-        stat: int = self.heroe.stats[self.actual_enemy['atributo_fuerte']] + roll
+        stat: int = self.heroe.stats[self.actual_enemy['stat']] + roll
 
-        if stat <= self.actual_enemy['nivel_poder'] - 5:
+        if stat <= self.actual_enemy['power'] - 5:
             data =self._loss_battle(True)
             data['status'] = CATASTROFIC_LOSS
-        elif stat <= self.actual_enemy['nivel_poder'] + 3:
+        elif stat <= self.actual_enemy['power'] + 3:
             data = self._loss_battle(False)
             data['status'] = LOSS
-        elif stat >= self.actual_enemy['nivel_poder'] + 10:
+        elif stat >= self.actual_enemy['power'] + 10:
             data = self._win_battle(True)
             data['status'] = PERFECT_WIN
         else:

@@ -17,9 +17,10 @@ def serializer_info(info: dict) -> str:
     
 def serializer_enemy(enemy: dict) -> str:
     nombre = f'Enemy: {enemy["nombre"]}\n'.replace(".", "\.")
+    aspecto = f'Aspecto: {enemy["aspecto"]}\n'.replace(".", "\.")
     situacion = f'{enemy["situacion"]}\n'.replace(".", "\.")
-    atributo = f'Poder: {enemy["atributo_fuerte"]} \= {enemy["nivel_poder"]}'
-    return nombre + situacion + atributo
+    atributo = f'Poder: {enemy["stat"]} \= {enemy["power"]}'
+    return nombre + aspecto + situacion + atributo
 
 def serializer_battle_status(status: int) -> str:
     if status == CATASTROFIC_LOSS:
