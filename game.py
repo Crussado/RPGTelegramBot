@@ -35,6 +35,7 @@ class StateGame:
     def _parser_response_gpt(self, response: str) -> (dict | bool):
         inicio = response.find('{')
         fin = response.find('}')
+        print(response)
         if inicio != -1 and fin != -1:
             dict_str = response[inicio:fin+1].strip()
             enemy: dict = eval(dict_str)
@@ -42,12 +43,12 @@ class StateGame:
                 if not key in enemy:
                     return False
             enemy['power']: int = randint(5, 20)
-            enemy['stat']: str = STATS[randint(0, len(STATS))]
+            enemy['stat']: str = STATS[randint(0, len(STATS) - 1)]
             return enemy
         return False
 
     def generate_battle(self) -> dict:
-        enemy = False
+        enemy = None
         while not enemy:
             completion = openai.ChatCompletion.create(
                 model='gpt-3.5-turbo',
@@ -85,14 +86,14 @@ class StateGame:
         exp: int = randint(1, 20)
         self.heroe.add_exp(exp)
         gold: int = randint(1, 20)
-        self.gold += gold
+        self.heroe.add_gold(gold)
         self.courage += 1
         self.treasures += self.actual_enemy['tesoro']
 
         return {
             'damage': damage,
             'exp': exp,
-            'gold': gold,
+            'gold': self.heroe.gold,
             'tresure': self.actual_enemy['tesoro']
         }
 

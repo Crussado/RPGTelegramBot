@@ -18,7 +18,7 @@ openai.api_key = os.getenv('API_KEY_OPENAI')
 
 NAME, CLASS, RACE, CANCEL, MENU, BATTLE, RESPONSE = range(7)
 MENU_BUTTONS = ['Info character', 'Find enemy', 'Pay for lvl']
-BATTLE_BUTTONS = [['Fight'], ['Escape']]
+BATTLE_BUTTONS = ['Fight', 'Escape']
 
 # COMANDS
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -82,7 +82,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def find(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     enemy: dict = context.user_data.get('game').generate_battle()
     enemy_msg = serializer_enemy(enemy)
-    reply_keyboard: list[list[str]] = BATTLE_BUTTONS
+    reply_keyboard: list[list[str]] = [[button] for button in BATTLE_BUTTONS]
 
     await update.message.reply_text(
         enemy_msg,
@@ -107,7 +107,7 @@ async def battle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         battle_msg = serializer_battle_result(data)
 
         await update.message.reply_text(
-            ESCAPE_MSG,
+            battle_msg,
             parse_mode='MarkdownV2',
             reply_markup=ReplyKeyboardRemove()
         )
@@ -204,7 +204,7 @@ if __name__ == '__main__':
                 MessageHandler(filters.Regex(MENU_BUTTONS[1]), find),
                 MessageHandler(filters.Regex(MENU_BUTTONS[2]), pay),
             ],
-            BATTLE: [MessageHandler(filters.Regex(f'^({"|".join(MENU_BUTTONS)})$'), battle)],
+            BATTLE: [MessageHandler(filters.Regex(f'^({"|".join(BATTLE_BUTTONS)})$'), battle)],
             CANCEL: [start],
         },
         fallbacks=[CommandHandler("cancel", cancel_command)],
