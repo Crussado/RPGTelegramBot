@@ -29,7 +29,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return NAME
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    HELP_MSG = 'this is a help message'
+    HELP_MSG = 'This is a help message'
     await update.message.reply_text(HELP_MSG)
 
 

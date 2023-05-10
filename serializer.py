@@ -16,9 +16,9 @@ def serializer_info(info: dict) -> str:
     return life + exp + gold + courage + stats
     
 def serializer_enemy(enemy: dict) -> str:
-    nombre = f'Enemy: {enemy["nombre"]}\n'.replace(".", "\.")
-    aspecto = f'Aspecto: {enemy["aspecto"]}\n'.replace(".", "\.")
-    situacion = f'{enemy["situacion"]}\n'.replace(".", "\.")
+    nombre = f'Enemy: {enemy["nombre"]}\n'.replace(".", "\.").replace("!", "\!")
+    aspecto = f'Aspecto: {enemy["aspecto"]}\n'.replace(".", "\.").replace("!", "\!")
+    situacion = f'{enemy["situacion"]}\n'.replace(".", "\.").replace("!", "\!")
     atributo = f'Poder: {enemy["stat"]} \= {enemy["power"]}'
     return nombre + aspecto + situacion + atributo
 
@@ -38,5 +38,5 @@ def serializer_battle_result(data: dict) -> str:
     damage = f'*Damage received*: {data["damage"]}\n'
     exp = f'\-*Exp*: {data["exp"]}\n' if data["exp"] else ''
     gold = f'\-*Gold*: {data["gold"]}\n' if data["gold"] else ''
-    tresure = f'Look at that is a tresure\! {data["tresure"]}\n' if data["tresure"] else ''
+    tresure = f'Look at that is a tresure\! {data["tresure"]}\n'.replace(".", "\.").replace("!", "\!") if data["tresure"] else ''
     return roll + status + damage + exp + gold + tresure
