@@ -1,7 +1,8 @@
 import logging
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, constants
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 from dotenv import load_dotenv
+from functools import wraps
 import os
 import openai
 
@@ -19,6 +20,20 @@ openai.api_key = os.getenv('API_KEY_OPENAI')
 NAME, CLASS, RACE, CANCEL, MENU, BATTLE, RESPONSE = range(7)
 MENU_BUTTONS = ['Info character', 'Find enemy', 'Pay for lvl']
 BATTLE_BUTTONS = ['Fight', 'Escape']
+
+def send_action(action):
+    """Sends `action` while processing func command."""
+
+    def decorator(func):
+        @wraps(func)
+        async def command_func(update, context, *args, **kwargs):
+            await context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=action)
+            return await func(update, context,  *args, **kwargs)
+        return command_func
+    
+    return decorator
+
+send_typing_action = send_action(constants.ChatAction.TYPING)
 
 # COMANDS
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -79,6 +94,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return await menu(update, context)
 
+@send_typing_action
 async def find(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     enemy: dict = context.user_data.get('game').generate_battle()
     enemy_msg = serializer_enemy(enemy)
@@ -213,7 +229,6 @@ if __name__ == '__main__':
     app.add_handler(conv_handler)
 
     # Commands
-    # app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
 
     # Messages
