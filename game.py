@@ -19,6 +19,7 @@ class StateGame:
 
     def get_info_heroe(self):
         return {
+            'lvl': self.heroe.lvl,
             'life': self.heroe.life,
             'exp': self.heroe.exp,
             'gold': self.heroe.gold,
@@ -120,5 +121,5 @@ class StateGame:
     def get_score(self) -> int:
         return self.heroe.lvl + len(self.treasures) + 0.1 (self.heroe.exp + self.heroe.gold + self.heroe.life)
 
-    def pay_for_lvl(self):
-        pass
+    def pay_for_lvl(self) -> bool:
+        return self.heroe.gold_for_lvl()

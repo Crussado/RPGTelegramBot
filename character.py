@@ -51,3 +51,6 @@ class Character:
         if self.gold >= GOLD_FOR_LVL:
             self.gold = 0
             self._lvl_up()
+            return True
+        return False
+        
