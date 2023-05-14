@@ -36,7 +36,6 @@ class StateGame:
     def _parser_response_gpt(self, response: str) -> (dict | bool):
         inicio = response.find('{')
         fin = response.find('}')
-        print(response)
         if inicio != -1 and fin != -1:
             dict_str = response[inicio:fin+1].strip()
             enemy: dict = eval(dict_str)
@@ -85,7 +84,7 @@ class StateGame:
 
         self.heroe.add_damage(damage)
         exp: int = randint(1, 20)
-        self.heroe.add_exp(exp)
+        lvl_up = self.heroe.add_exp(exp)
         gold: int = randint(1, 20)
         self.heroe.add_gold(gold)
         self.courage += 1
@@ -95,7 +94,8 @@ class StateGame:
             'damage': damage,
             'exp': exp,
             'gold': self.heroe.gold,
-            'tresure': self.actual_enemy['tesoro']
+            'tresure': self.actual_enemy['tesoro'],
+            'lvl_up': lvl_up
         }
 
     def fight_battle(self) -> int:
@@ -121,5 +121,5 @@ class StateGame:
     def get_score(self) -> int:
         return self.heroe.lvl + len(self.treasures) + 0.1 (self.heroe.exp + self.heroe.gold + self.heroe.life)
 
-    def pay_for_lvl(self) -> bool:
+    def pay_for_lvl(self) -> str:
         return self.heroe.gold_for_lvl()

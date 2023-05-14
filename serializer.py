@@ -34,7 +34,6 @@ def serializer_battle_status(status: int) -> str:
         return 'Yeah! you got a perfect\n'
 
 def serializer_battle_result(data: dict) -> str:
-    print(data)
     roll = f'*You roll*: {data["roll"]}\n'
     status = serializer_battle_status(data['status'])
     damage = f'*Damage received*: {data["damage"]}\n'
@@ -42,3 +41,8 @@ def serializer_battle_result(data: dict) -> str:
     gold = f'- *Gold*: {data["gold"]}\n' if data.get("gold") else ''
     tresure = f'Look at that is a tresure! {data["tresure"]}\n' if data.get("tresure") else ''
     return roll + status + damage + exp + gold + tresure
+
+def serializer_lvl_up(info: dict, stat: str) -> str:
+    lvl = f'Congratulations! you level up: {info["lvl"] - 1 } -> {info["lvl"]}\n'
+    stats = f'- {stat} +1'
+    return lvl + stats

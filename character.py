@@ -3,7 +3,7 @@ from settings import STATS, RACES, CLASSES
 
 INITIAL_LIFE = 100
 LIFE_FACTOR = 1.05
-LIMIT_EXP = 100
+LIMIT_EXP = 10
 GOLD_FOR_LVL = 10
 
 class Character:
@@ -25,18 +25,21 @@ class Character:
     def add_stats(self, stats_own: dict, new_stats: dict) -> dict:
         return { key: stats_own[key] + new_stats[key] for key in STATS }
 
-    def _lvl_up(self) -> None:
+    def _lvl_up(self) -> str:
         self.lvl += 1
         self._max_life *= LIFE_FACTOR
         self.life = self._max_life
+        self.exp = 0
+        stat = STATS[randint(0, len(STATS) - 1)]
+        self.stats[stat] += 1
+        return stat 
 
-    def add_exp(self, exp : int) -> bool:
+    def add_exp(self, exp : int) -> str:
         self.exp += exp
         if self.exp >= LIMIT_EXP:
             self.exp -= LIMIT_EXP
-            self._lvl_up()
-            return True
-        return False
+            return self._lvl_up()
+        return ''
     
     def add_stat(self, stat : str) -> None:
         self.stats[stat] += 1
@@ -47,10 +50,9 @@ class Character:
     def add_damage(self, damage : int) -> None:
         self.life -= damage
     
-    def gold_for_lvl(self) -> None:
+    def gold_for_lvl(self) -> str:
         if self.gold >= GOLD_FOR_LVL:
             self.gold = 0
-            self._lvl_up()
-            return True
-        return False
+            return self._lvl_up()
+        return ''
         

@@ -9,7 +9,7 @@ from re import sub
 
 from settings import RACES, CLASSES
 from game import StateGame
-from serializer import serializer_info, serializer_enemy, serializer_battle_result
+from serializer import serializer_info, serializer_enemy, serializer_battle_result, serializer_lvl_up
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -37,7 +37,10 @@ def send_action(action):
 send_typing_action = send_action(constants.ChatAction.TYPING)
 
 def format_markdown(msg: str) -> str:
-    characters = ['!', '.', '>', '-', '='] # TODO *+|_[](){}#~
+    characters = ['!', '.', '>', '-', '=', '+', '(' ,')', '[', ']', '{', '}'] # TODO *|_#~
+    for character in characters:
+        msg = msg.replace(character, f'\{character}')
+    return msg
     return sub(
         '|'.join(characters),
         lambda term: f'\{term.group(0)}' if term.group(0) in characters else term.group(0),
@@ -95,15 +98,14 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return RESPONSE
 
-def lvl_up_msg(heroe_info: dict) -> str:
-    LVL_UP_MSG = 'Congratulations! you level up:'
-    return f'{LVL_UP_MSG} {heroe_info["lvl"] - 1 } -> {heroe_info["lvl"]}'
-
 async def pay(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    result = context.user_data.get('game').pay_for_lvl()
+    result: str = context.user_data.get('game').pay_for_lvl()
 
     if result:
-        msg = lvl_up_msg(context.user_data.get('game').get_info_heroe())
+        msg = serializer_lvl_up(
+            context.user_data.get('game').get_info_heroe(),
+            result,
+        )
     else:
         PAY_FAILED_MSG = "You don't have enough gold"
         msg = PAY_FAILED_MSG
@@ -167,6 +169,19 @@ async def battle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         parse_mode='MarkdownV2',
         reply_markup=ReplyKeyboardRemove()
     )
+
+    if data.get('lvl_up'):
+        await update.message.reply_text(
+            format_markdown(
+                serializer_lvl_up(
+                    context.user_data.get('game').get_info_heroe(),
+                    data['lvl_up'],
+                ),
+
+            ),
+            parse_mode='MarkdownV2',
+            reply_markup=ReplyKeyboardRemove()
+        )
 
     return await menu(update, context)
 
