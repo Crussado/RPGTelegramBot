@@ -1,5 +1,5 @@
 from random import randint
-from settings import STATS
+from settings import STATS, RACES, CLASSES
 
 INITIAL_LIFE = 100
 LIFE_FACTOR = 1.05
@@ -16,10 +16,14 @@ class Character:
         self.name : str = name
         self.clas : str = clas
         self.race : str = race
-        self.stats : dict = { stat: randint(1, 20) for stat in STATS }
+        basic_stats : dict = { stat: randint(1, 20) for stat in STATS }
+        self.stats = self.add_stats(self.add_stats(basic_stats, CLASSES[clas]), RACES[race])
 
     def __str__(self) -> str:
         return f'{ self.name } - { self.clas } - { self.race }'
+
+    def add_stats(self, stats_own: dict, new_stats: dict) -> dict:
+        return { key: stats_own[key] + new_stats[key] for key in STATS }
 
     def _lvl_up(self) -> None:
         self.lvl += 1

@@ -212,8 +212,8 @@ if __name__ == '__main__':
         entry_points=[start],
         states={
             NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
-            RACE: [MessageHandler(filters.Regex(f'^({"|".join(RACES)})$'), get_race)],
-            CLASS: [MessageHandler(filters.Regex(f'^({"|".join(CLASSES)})$'), get_class)],
+            RACE: [MessageHandler(filters.Regex(f'^({"|".join(list(RACES.keys()))})$'), get_race)],
+            CLASS: [MessageHandler(filters.Regex(f'^({"|".join(list(CLASSES.keys()))})$'), get_class)],
             MENU: [MessageHandler(filters.Regex(f'^({"|".join(MENU_BUTTONS)})$'), menu)],
             RESPONSE: [
                 MessageHandler(filters.Regex(MENU_BUTTONS[0]), info),
